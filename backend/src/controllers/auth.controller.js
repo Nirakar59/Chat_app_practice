@@ -5,7 +5,7 @@ export const signup = async(req,res)=>{
 
     const{fullName, password, email} = req.body
     try {
-        if(!fullName || !password || !email) return res.status(400).json("All fields are required!!")
+        if(!fullName || !password || !email) return res.status(400).json({message:"All fields are required!!"})
         if(password<8){
             return res.status(400).json({message: "Password must be atleast 8 characters long"})
         }
@@ -90,5 +90,11 @@ export const logout = (req,res)=>{
 }
 
 export const updateProfile = async(req, res) =>{
-    
+    try {
+        const {profilePic} = req.body
+        req.user._id
+    } catch (error) {
+        console.log("Profile Update error: ", error.message);
+        res.status(500).json({message:"Internal Server Error!!"})
+    }
 }
