@@ -1,3 +1,4 @@
+import cloudinary from "../lib/cloudinary.js"
 import Message from "../models/message.model.js"
 import User from "../models/user.model.js"
 
@@ -34,10 +35,33 @@ export const getMessages = async (req, res) => {
 }
 
 export const sendMessage = async (req, res) => {
-
-    const { text, image } = req.body
-
+ 
     try {
+        const { text, image } = req.body
+        const {id: receiverId} = req.params
+        const senderId = req.user._id
+
+        let imageUrl
+
+        if(!image) return res.status(400).json({message:"Insert image"})
+
+        const uploadResponse = await cloudinary.uploader.upload(image)
+        imageUrl = uploadResponse.secure_url
+
+        const newMessage =  new Message(
+            {
+                senderId,
+                receiverId,
+                text,
+                image: imageUrl
+            }
+        )
+
+        await newMessage.save()
+
+        //todo: Real Time chat using Socket IO
+
+        res.status(201).json(newMessage)
 
     } catch (error) {
         console.log("Error sending messages: ", error.message);
