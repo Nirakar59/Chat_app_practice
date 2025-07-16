@@ -1,8 +1,19 @@
 import React from 'react'
+import { useAuthStore } from '../store/useAuthStore'
 
 const HomePage = () => {
+
+  const {logout} = useAuthStore()
+
+  const handleClick = ()=>{
+    logout()
+  }
   return (
-    <div>HomePage</div>
+    <div>HomePage
+      <button onClick={handleClick} >
+        logout
+      </button>
+    </div>
   )
 }
 

@@ -1,10 +1,12 @@
-import { createBrowserRouter, Outlet } from "react-router";
+import { createBrowserRouter, Navigate, Outlet } from "react-router";
 import App from "./App";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import SettingsPage from "./pages/SettingsPage";
 import ProfilePage from "./pages/ProfilePage";
+import {ProtectedRoute, ToHomePage} from "./components/protectedRoute";
+
 
 const router = createBrowserRouter(
     [
@@ -14,11 +16,19 @@ const router = createBrowserRouter(
             children:[
                 {
                     index: true,
-                    element: <HomePage/>
+                    element: (
+                        <ProtectedRoute>
+                            <HomePage/>
+                        </ProtectedRoute>
+                    )
                 },
                 {
                     path:"login",
-                    element:<LoginPage/>
+                    element:(
+                        <ToHomePage>
+                            <LoginPage/>
+                        </ToHomePage>
+                    )
                 },
                 {
                     path:"signup",
@@ -26,11 +36,15 @@ const router = createBrowserRouter(
                 },
                 {
                     path:"settings",
-                    element: <SettingsPage/>
+                    element:<SettingsPage/>
                 },
                 {
                     path:"profile",
-                    element:<ProfilePage/>
+                    element:(
+                        <ProtectedRoute>
+                            <ProfilePage/>
+                        </ProtectedRoute>
+                    )
                 }
             ]
         }
