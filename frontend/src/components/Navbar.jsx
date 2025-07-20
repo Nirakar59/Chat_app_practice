@@ -6,10 +6,10 @@ const Navbar = () => {
   const { logout, authUser } = useAuthStore()
 
   return (
-    <header className="bg-base-100 shadow-md px-6 py-4 flex items-center justify-between">
+    <header className="bg-base-100 shadow-md px-6 py-4 flex items-center justify-between h-16 min-h-[64px] box-border">
       {/* Left: Logo */}
       <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
-        <Link to="/">Chatty</Link>
+        <Link to="/">PlayVerse</Link>
       </div>
 
       {/* Right: Navigation */}

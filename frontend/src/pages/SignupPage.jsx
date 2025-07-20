@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useAuthStore } from '../store/useAuthStore'
 import { Eye, EyeOff } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import AuthImagePattern from '../components/AuthImage'
 import toast from 'react-hot-toast'
 
@@ -29,6 +29,7 @@ const SignupPage = () => {
     e.preventDefault()
     const success = validateInput()
     if (success) signup(formData)
+    Navigate("/")
   }
 
   return (
@@ -94,7 +95,7 @@ const SignupPage = () => {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-3 flex items-center text-base-content"
                 >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
                 </button>
               </div>
             </div>
