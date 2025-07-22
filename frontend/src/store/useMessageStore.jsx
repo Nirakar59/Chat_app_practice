@@ -52,7 +52,8 @@ export const useMessageStore = create((set, get)=>(
             if(!selectedUser) return
  
             const socket = useAuthStore.getState().socket
-            socket.on("newMessaege", (newMessage)=>{
+            socket.on("newMessage", (newMessage)=>{
+                if(newMessage.senderId !== selectedUser._id) return
                 set({
                     messages: [...get().messages, newMessage]
                 })

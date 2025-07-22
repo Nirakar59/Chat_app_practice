@@ -43,25 +43,37 @@ const ChatContainer = () => {
       <div className="flex-1 overflow-auto px-4 py-2 space-y-3">
         {messages.map((message) => (
           <div key={message._id}>
-            <div className={`chat ${message.senderId === authUser._id ? 'chat-end' : 'chat-start'}`}>
+            <div className={`chat ${message.senderId === authUser._id ? "chat-end" : "chat-start"}`}>
               {/* Avatar */}
-              <div className={`${message.senderId === authUser._id ? 'hidden' : 'chat-image'}`}>
+              <div className={`${message.senderId === authUser._id ? "hidden" : "chat-image"}`}>
                 <div className="avatar">
-                <div className="size-10 rounded-full border">
-                  <img src={selectedUser.profilePic} alt="profilePic" />
-                </div>
+                  <div className="size-10 rounded-full border">
+                    <img src={selectedUser.profilePic} alt="profilePic" />
+                  </div>
                 </div>
               </div>
 
               {/* Timestamp */}
               <div className="chat-header mb-1">
-                <time className="text-xs opacity-50 ml-1">
+                <time
+                  className={`text-xs ml-1 mt-1 opacity-60 ${message.senderId === authUser._id
+                      ? "text-primary-content/70"
+                      : "text-base-content/70"
+                    }`}
+                >
                   {formatMessageTime(message.createdAt)}
                 </time>
               </div>
 
-              {/* Message bubble */}
-              <div className="chat-bubble flex flex-col">
+              {/* Message bubble with themed colors */}
+              <div
+                className={`chat-bubble flex flex-col rounded-xl shadow-md
+          ${message.senderId === authUser._id
+                    ? "bg-primary text-primary-content"
+                    : "bg-base-200 text-base-content"
+                  }
+        `}
+              >
                 {message.image && (
                   <img
                     src={message.image}
@@ -74,6 +86,9 @@ const ChatContainer = () => {
             </div>
           </div>
         ))}
+
+
+
 
         {/* This empty div will be scrolled into view to push the container to bottom */}
         <div ref={messagesEndRef} />

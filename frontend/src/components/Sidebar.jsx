@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useMessageStore } from '../store/useMessageStore'
 import SidebarSkeleton from './Skeletions/SidebarSkeletion'
 import { Users } from 'lucide-react'
@@ -8,9 +8,12 @@ const Sidebar = () => {
 
   const { users, isLoadinUsers, getUsers, selecteduser, setSelectedUser} = useMessageStore()
   const {onlineUsers} = useAuthStore()
+  const[showOnlineOnly , setShowOnlineOnly] = useState(false)
   useEffect(()=>{
     getUsers()
   },[getUsers])
+
+  const filteredUsers = showOnlineOnly? users.filter(user=> onlineUsers.includes(user._id)): users
 
   if(isLoadinUsers) return <SidebarSkeleton/>
 
@@ -23,8 +26,22 @@ const Sidebar = () => {
         </div>
       </div>
       {/* TODO Online filter toggle */}
+       <div className="mt-3 hidden lg:flex items-center gap-2">
+          <label className="cursor-pointer flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={showOnlineOnly}
+              onChange={(e) => setShowOnlineOnly(e.target.checked)}
+              className="checkbox checkbox-sm"
+            />
+            <span className="text-sm">Show online only</span>
+          </label>
+          <span className="text-xs text-zinc-500">({onlineUsers.length - 1} online)</span>
+        </div>
+      
+
       <div className="overflow-y-auto w-full py-3">
-        {users.map((user)=>(
+        {filteredUsers.map((user)=>(
           <button
            key={user._id}
            onClick={()=>setSelectedUser(user)}

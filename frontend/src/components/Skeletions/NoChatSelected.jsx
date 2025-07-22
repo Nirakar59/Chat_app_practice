@@ -7,7 +7,7 @@ const NoChatSelected = () => {
         {/* Icon Display */}
         <div className="flex justify-center gap-4 mb-4">
           <div
-            className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center animate-bounce
+            className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center animate-pulse  
                        shadow-lg shadow-primary/20"
           >
             <MessageSquare className="w-8 h-8 text-primary" />
