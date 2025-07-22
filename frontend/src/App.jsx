@@ -12,7 +12,6 @@ function App() {
     checkAuth()
   },[checkAuth])
 
-  // eslint-disable-next-line no-constant-condition
   if (!authUser && isCheckingAuth)
     return (
   <div className="flex items-center justify-center h-screen">
@@ -23,7 +22,7 @@ function App() {
 
   return (
     <>
-    <div data-theme={theme}>
+    <div data-theme={theme} >
     <Layout/>
     </div>
 
