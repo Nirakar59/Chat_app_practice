@@ -8,7 +8,7 @@ import { formatMessageTime } from '../lib/timeFormatter'
 
 const ChatContainer = () => {
   const { authUser } = useAuthStore()
-  const { isLoadingMessages, selectedUser, messages, getmessage, subscribeToMessages, unsubscribeToMessages} = useMessageStore()
+  const { isLoadingMessages, selectedUser, messages, getmessage, subscribeToMessages, unsubscribeToMessages , deleteChat} = useMessageStore()
   const messagesEndRef = useRef(null)
 
   useEffect(() => {
@@ -18,7 +18,7 @@ const ChatContainer = () => {
 
     return ()=> unsubscribeToMessages()
 
-  }, [getmessage, selectedUser, subscribeToMessages, unsubscribeToMessages])
+  }, [getmessage, selectedUser, subscribeToMessages, unsubscribeToMessages,deleteChat])
 
   // Scroll to bottom whenever messages change
   useEffect(() => {

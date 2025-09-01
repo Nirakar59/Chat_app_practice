@@ -10,6 +10,7 @@ export const useMessageStore = create((set, get)=>(
         selectedUser: null,
         isLoadingMessages: false,
         isLoadingUsers: false,
+        isDeletingChat: false,
 
         getUsers: async()=> {
             set({isLoadingUsers: true})
@@ -24,6 +25,7 @@ export const useMessageStore = create((set, get)=>(
             }
         },
 
+        
         getmessage: async (userId) => {
             set({isLoadingMessages:true})
             try {
@@ -46,6 +48,26 @@ export const useMessageStore = create((set, get)=>(
                 toast.error(error.response.data.message)
             }
         },
+        
+        deleteChat: async(userId)=>{
+            const {selectedUser}= get()
+            try{
+                set({isDeletingChat:true})
+                const res = await axiosInstance.delete(`/message/delete/${selectedUser._id}`)    
+                
+                get().getmessage(userId)
+                toast.success(res.data.message)
+
+
+            }
+            catch(error){
+                toast.error(error.response.data.message)
+            }
+            finally{
+                set({isDeletingChat:false})
+            }
+        },
+
 
         subscribeToMessages : ()=>{
             const{selectedUser} = get()
@@ -59,6 +81,7 @@ export const useMessageStore = create((set, get)=>(
                 })
             })
         },
+
 
         unsubscribeToMessages: ()=>{
             const socket = useAuthStore.getState().socket

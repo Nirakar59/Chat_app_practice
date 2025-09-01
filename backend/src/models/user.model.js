@@ -1,4 +1,5 @@
 import mongoose from "mongoose"
+import Guild from "./guild.model"
 
 const UserSchema = mongoose.Schema(
     {
@@ -19,6 +20,10 @@ const UserSchema = mongoose.Schema(
         profilePic: {
             type: String,
             default: ''
+        },
+        affiliatedGuilds:{
+            type:[mongoose.Schema.Types.ObjectId],
+            ref: Guild
         }
     },
     {

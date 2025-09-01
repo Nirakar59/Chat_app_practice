@@ -1,6 +1,7 @@
 import express from "express";
 import authRoutes from "./routes/auth.route.js"
 import messageRoutes from "./routes/message.route.js"
+import guildRoutes from "./routes/guild.routes.js"
 import cookieParser from "cookie-parser"
 import dotenv from "dotenv"
 import { connectDB } from "./db/db.js";
@@ -21,6 +22,7 @@ app.use(cors(
 
 app.use("/api/message", messageRoutes)
 app.use("/api/auth", authRoutes)
+app.use("/api/guild", guildRoutes)
 
 
 server.listen(PORT, (req, res) => {

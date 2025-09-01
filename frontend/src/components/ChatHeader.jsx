@@ -1,9 +1,9 @@
-import { X } from "lucide-react";
+import { Trash, X } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useMessageStore } from "../store/useMessageStore";
 
 const ChatHeader = () => {
-    const { selectedUser, setSelectedUser } = useMessageStore();
+    const { selectedUser, setSelectedUser, deleteChat } = useMessageStore();
     const { onlineUsers } = useAuthStore();
 
     return (
@@ -27,9 +27,19 @@ const ChatHeader = () => {
                 </div>
 
                 {/* Close button */}
-                <button onClick={() => setSelectedUser(null)}>
-                    <X />
-                </button>
+                <div className=" flex gap-5">
+
+
+                    <button onClick={()=>deleteChat(selectedUser._id)} className="cursor-pointer hover:bg-gray-200">
+                        <Trash />
+                    </button>
+
+
+                    <button onClick={() => setSelectedUser(null)} className="cursor-pointer hover:bg-gray-200">
+                        <X />
+                    </button>
+
+                </div>
             </div>
         </div>
     );

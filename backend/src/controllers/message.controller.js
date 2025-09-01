@@ -72,3 +72,31 @@ export const sendMessage = async (req, res) => {
         res.status(500).json({ message: "" })
     }
 }
+
+export const deleteMessage = async(req,res)=>{
+
+    try{
+        const userId = req.user._id
+        const {id:userToDeleteId} = req.params
+
+        const deletedMessage = await Message.deleteMany(
+            {
+                $or: [
+                    { senderId: userId, receiverId:userToDeleteId},
+                    { senderId: userToDeleteId, receiverId:userId}
+                ]
+            }
+        )
+        const count = deletedMessage.deletedCount ?? result.n ?? 0;
+        res.status(200).json(
+            {
+                message:`${count} messages deleted succesfully`
+            }
+        )
+
+    }
+    catch(err){
+        console.log("Error deleting messages: ", err.message )
+        res.status(500).json({message:"Internal Server Error"})
+    }
+}
