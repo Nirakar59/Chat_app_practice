@@ -1,5 +1,6 @@
 import mongoose from "mongoose"
-import Guild from "./guild.model"
+import Guild from "./guild.model.js"
+import FriendRequest from "./friendRequset.model.js"
 
 const UserSchema = mongoose.Schema(
     {
@@ -24,6 +25,14 @@ const UserSchema = mongoose.Schema(
         affiliatedGuilds:{
             type:[mongoose.Schema.Types.ObjectId],
             ref: Guild
+        },
+        pendingRequests: {
+            type: [mongoose.Schema.Types.ObjectId],
+            ref: FriendRequest
+        },
+        friendList: {
+            type: [mongoose.Schema.Types.ObjectId],
+            ref: "User"
         }
     },
     {

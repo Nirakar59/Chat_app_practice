@@ -1,8 +1,8 @@
 import express from "express"
-import { protectRoute } from "../middlewares/auth.middleware"
-import { addMembers, assignRole, createGuild, deleteGuild } from "../controllers/guild.controller"
+import { protectRoute } from "../middlewares/auth.middleware.js"
+import { addMembers, assignRole, createGuild, deleteGuild } from "../controllers/guild.controller.js"
 
-const router = express.router()
+const router = express.Router()
 
 router.post("/create", protectRoute,createGuild)
 

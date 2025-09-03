@@ -8,9 +8,12 @@ const HomePage = () => {
   const { selectedUser } = useMessageStore()
 
   return (
-    <div className="h-screen overflow-hidden grid grid-cols-[280px_1fr]">
+    <div className="h-full w-full grid grid-cols-1 md:grid-cols-[280px_1fr] overflow-hidden">
+      {/* Sidebar */}
       <Sidebar />
-      <div className="h-full overflow-hidden">
+
+      {/* Main Chat Area */}
+      <div className="flex flex-col h-full overflow-hidden">
         {selectedUser ? <ChatContainer /> : <NoChatSelected />}
       </div>
     </div>

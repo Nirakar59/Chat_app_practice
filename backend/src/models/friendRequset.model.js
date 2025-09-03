@@ -1,18 +1,18 @@
 import mongoose from "mongoose";
-import User from "./user.model";
+import User from "./user.model.js";
 
 const friendRequestSchema = mongoose.Schema(
     {
 
         requestSender:{
             type: mongoose.Schema.Types.ObjectId,
-            ref:User,
+            ref:"User",
             required: true
         },
 
         requestRecipient:{
             type: mongoose.Schema.Types.ObjectId,
-            ref: User,
+            ref: "User",
             required: true
         },
 
@@ -30,4 +30,4 @@ const friendRequestSchema = mongoose.Schema(
 
 const FriendRequest = mongoose.model("FriendRequest", friendRequestSchema)
 
-export default Friendship
+export default FriendRequest

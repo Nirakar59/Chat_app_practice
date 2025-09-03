@@ -1,13 +1,18 @@
-import Navbar from '../components/Navbar'
-import { Outlet } from "react-router"
+import { Outlet } from "react-router";
+import Navbar from "../components/Navbar";
 
 const Layout = () => {
   return (
-    <>
-    <Navbar/> 
-    <Outlet/>
-    </>
-  )
-}
+    <div className="h-screen flex flex-col overflow-hidden">
+      {/* Navbar stays always visible */}
+      <Navbar />
 
-export default Layout
+      {/* Page content takes remaining space and is scrollable */}
+      <main className="flex-1 overflow-hidden">
+        <Outlet />
+      </main>
+    </div>
+  );
+};
+
+export default Layout;

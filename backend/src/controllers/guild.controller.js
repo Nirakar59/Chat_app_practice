@@ -1,5 +1,5 @@
-import Guild from "../models/guild.model"
-import User from "../models/user.model"
+import Guild from "../models/guild.model.js"
+import User from "../models/user.model.js"
 
 export const createGuild =  async(req,res) =>{
     const {guildName, guildIcon} = req.body
@@ -24,7 +24,7 @@ export const createGuild =  async(req,res) =>{
         if(newGuild){
             await newGuild.save();
 
-        const userAffiliation = await User.findByIdAndUpdate(
+        await User.findByIdAndUpdate(
             user._id,
             { $push: {affiliatedGuilds: newGuild._id} },
             {new: true}

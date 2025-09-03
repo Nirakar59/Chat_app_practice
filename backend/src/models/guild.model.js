@@ -1,11 +1,11 @@
 import mongoose from "mongoose";
-import User from "./user.model";
+import User from "./user.model.js";
 
 const membersSchema = mongoose.Schema(
     {
         member:{
             type: mongoose.Schema.Types.ObjectId,
-            ref:User
+            ref:"User"
         },
             role: {
             type: String,
