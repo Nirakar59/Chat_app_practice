@@ -1,12 +1,14 @@
 import React, { useState } from 'react'
 import { useAuthStore } from '../store/useAuthStore'
 import { Eye, EyeOff } from 'lucide-react'
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import AuthImagePattern from '../components/AuthImage'
 import toast from 'react-hot-toast'
 
 const SignupPage = () => {
   const [showPassword, setShowPassword] = useState(false)
+  
+  const navigate = useNavigate()
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -29,7 +31,7 @@ const SignupPage = () => {
     e.preventDefault()
     const success = validateInput()
     if (success) signup(formData)
-    Navigate("/")
+    navigate("/")
   }
 
   return (

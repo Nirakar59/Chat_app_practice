@@ -1,23 +1,22 @@
-import React from 'react'
-import { useMessageStore } from '../store/useMessageStore'
-import Sidebar from '../components/Sidebar'
-import ChatContainer from '../components/ChatContainer'
-import NoChatSelected from '../components/Skeletions/NoChatSelected'
+import { useState } from "react";
+import HomeSidebar from "../components/HomeSidebar";
+import Guilds from "../components/Guilds";
 
 const HomePage = () => {
-  const { selectedUser } = useMessageStore()
+  const [activePage, setActivePage] = useState("streams");
 
   return (
-    <div className="h-full w-full grid grid-cols-1 md:grid-cols-[280px_1fr] overflow-hidden">
-      {/* Sidebar */}
-      <Sidebar />
+    <div className="flex h-screen bg-base-200">
+      <HomeSidebar onNavigate={setActivePage} />
 
-      {/* Main Chat Area */}
-      <div className="flex flex-col h-full overflow-hidden">
-        {selectedUser ? <ChatContainer /> : <NoChatSelected />}
+      {/* Main Content */}
+      <div className="flex-1 p-4 lg:ml-60 mt-12 lg:mt-0 overflow-y-auto">
+        {activePage === "streams" && <h1>Ongoing Streams 🎮</h1>}
+        {activePage === "guilds" && <div><Guilds/> </div>}
+        {activePage === "friends" && <h1>Friends 👥</h1>}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default HomePage
+export default HomePage;

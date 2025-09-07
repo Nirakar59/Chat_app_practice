@@ -1,11 +1,12 @@
 import { createBrowserRouter, Navigate, Outlet } from "react-router";
 import App from "./App";
-import HomePage from "./pages/HomePage";
+import Messenger from "./pages/Messenger";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import SettingsPage from "./pages/SettingsPage";
 import ProfilePage from "./pages/ProfilePage";
 import {ProtectedRoute, ToHomePage} from "./components/protectedRoute";
+import HomePage from "./pages/HomePage";
 
 
 const router = createBrowserRouter(
@@ -22,6 +23,15 @@ const router = createBrowserRouter(
                         </ProtectedRoute>
                     )
                 },
+                {
+                    path: "messenger",
+                    element: (
+                        <ProtectedRoute>
+                            <Messenger />
+                        </ProtectedRoute>
+                    )
+                },
+                
                 {
                     path:"login",
                     element:(
