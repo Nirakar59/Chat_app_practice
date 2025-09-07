@@ -24,11 +24,6 @@ export const createGuild =  async(req,res) =>{
         if(newGuild){
             await newGuild.save();
 
-        await User.findByIdAndUpdate(
-            user._id,
-            { $push: {affiliatedGuilds: newGuild._id} },
-            {new: true}
-        )
 
             res.status(201).json({
                 guildName: newGuild.guildName,
@@ -149,3 +144,39 @@ export const deleteGuild = async(req,res) => {
         
     }
 }
+
+export const getAllPublicGuilds = async(req, res) => {
+    try {
+
+        const guildss = await Guild.find({})
+
+        if(!guildss) return res.status(400).json({message: "No guilds are created yet"})
+
+        const publicGuilds = await Guild.find({guildType:"public"})
+
+        res.status(200).json({publicGuilds})
+
+
+    } catch (error) {
+        console.log("Error getting the guilds: ", error.message);
+        res.status(500).json({message: "Internal Server Error!!"})
+    }
+
+}
+
+export const getUsersGuilds = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        const user = await User.findById(userId).populate("affiliatedGuilds");
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json(user.affiliatedGuilds);
+    } catch (error) {
+        console.log("Error getting the guilds: ", error.message);
+        res.status(500).json({ message: "Internal Server Error!!" });
+    }
+};
