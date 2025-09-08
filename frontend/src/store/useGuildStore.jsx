@@ -1,4 +1,3 @@
-// src/stores/useGuildStore.js
 import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
@@ -11,17 +10,28 @@ export const useGuildStore = create((set, get) => ({
     isCreatingGuild: false,
     isAddingMembers: false,
     isAssigningRole: false,
-    isDeletingGuild: false,
+    isDeletingGuild: false, 
+
 
     getAllGuilds: async () => {
         set({isLoadingGuilds:true})
         try{
             const res = await axiosInstance.get("/guild/getpublicguilds")
-            set({ guilds: res.data.publicGuilds })
+            set({ publicGuilds: res.data.publicGuilds })
         } catch(error) {
             toast.error(error.response?.data?.message || "Failed to fetch guilds");
         } finally {
             set({ isLoadingGuilds: false });
+        }
+    },
+
+    getGuildByName : async(guildName) => {
+        try {
+            const res = await axiosInstance.get(`guild/getbyid/${guildName}`)
+            set({selectedGuild: res.data.guild})
+            console.log(get().selectedGuild)
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to fetch the desired guild");
         }
     },
     // Fetch guilds for logged-in user
@@ -68,6 +78,21 @@ export const useGuildStore = create((set, get) => ({
         }
     },
 
+    // Join guild
+    joinGuild : async(guildId) => {
+        set({isAddingMembers: true})
+        try {
+            const res = await axiosInstance.put(`/guild/joinguild/${guildId}`)
+            set({selectedGuild: res.data})
+            toast.success("Guild Joined ✅")
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to join the guild");
+        }
+        finally{
+            set({isAddingMembers: false})
+        }
+    },
+
     // Assign role
     assignRole: async (guildId, targetId, role) => {
         set({ isAssigningRole: true });
@@ -101,6 +126,7 @@ export const useGuildStore = create((set, get) => ({
             set({ isDeletingGuild: false });
         }
     },
+
 
     // Select a guild
     setSelectedGuild: (guild) => set({ selectedGuild: guild }),

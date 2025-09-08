@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate, Outlet } from "react-router";
+import { createBrowserRouter } from "react-router";
 import App from "./App";
 import Messenger from "./pages/Messenger";
 import LoginPage from "./pages/LoginPage";
@@ -7,6 +7,8 @@ import SettingsPage from "./pages/SettingsPage";
 import ProfilePage from "./pages/ProfilePage";
 import {ProtectedRoute, ToHomePage} from "./components/protectedRoute";
 import HomePage from "./pages/HomePage";
+import AllGuilds from "./pages/AllGuilds";
+import GuildPage from "./pages/GuildPage";
 
 
 const router = createBrowserRouter(
@@ -24,12 +26,38 @@ const router = createBrowserRouter(
                     )
                 },
                 {
+                    path: ":guildName",
+                    element:(
+                        <ProtectedRoute>
+                            <GuildPage/>
+                        </ProtectedRoute>
+                    )
+                },
+                {
                     path: "messenger",
                     element: (
                         <ProtectedRoute>
                             <Messenger />
                         </ProtectedRoute>
                     )
+                },
+                {
+                    path: "guilds",
+                    element: (
+                        <ProtectedRoute>
+                            <AllGuilds />
+                        </ProtectedRoute>
+                    ),
+                    children:[
+                        {
+                            path: ":id",
+                            element: (
+                                <ProtectedRoute>
+                                    <GuildPage />
+                                </ProtectedRoute>
+                            )
+                        }
+                    ]
                 },
                 
                 {

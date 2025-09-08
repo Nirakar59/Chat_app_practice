@@ -1,19 +1,24 @@
 import { useState } from "react";
 import HomeSidebar from "../components/HomeSidebar";
-import Guilds from "../components/Guilds";
+import MyGuilds from "../components/MyGuilds";
 
 const HomePage = () => {
   const [activePage, setActivePage] = useState("streams");
+  
 
   return (
-    <div className="flex h-screen bg-base-200">
+    
+    <div className="h-screen bg-base-200 flex">
+      {/* Sidebar */}
       <HomeSidebar onNavigate={setActivePage} />
 
       {/* Main Content */}
-      <div className="flex-1 p-4 lg:ml-60 mt-12 lg:mt-0 overflow-y-auto">
-        {activePage === "streams" && <h1>Ongoing Streams 🎮</h1>}
-        {activePage === "guilds" && <div><Guilds/> </div>}
-        {activePage === "friends" && <h1>Friends 👥</h1>}
+      <div className="flex-1 p-4 overflow-y-auto lg:ml-60">
+        <div className="pt-14 lg:pt-4">
+          {activePage === "streams" && <h1>Ongoing Streams 🎮</h1>}
+          {activePage === "guilds" && <MyGuilds />}
+          {activePage === "friends" && <h1>Friends 👥</h1>}
+        </div>
       </div>
     </div>
   );

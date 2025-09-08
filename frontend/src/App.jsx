@@ -12,7 +12,7 @@ function App() {
   useEffect(() => {
     checkAuth()
   }, [checkAuth])
-
+ 
   // Apply theme to <html> tag
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
