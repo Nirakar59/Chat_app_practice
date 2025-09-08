@@ -33,6 +33,11 @@ const guildSchema = mongoose.Schema(
         guildType:{
             type:String,
             emum:['public', 'private']
+        },
+
+        streams: {
+            type: [mongoose.Schema.Types.ObjectId],
+            ref: "Stream"
         }
         
 

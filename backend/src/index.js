@@ -4,6 +4,7 @@ import messageRoutes from "./routes/message.route.js"
 import guildRoutes from "./routes/guild.routes.js"
 import friendRequestRoutes from "./routes/friendRequest.route.js"
 import streamRoutes from "./routes/stream.route.js"
+import guildChatRoutes from "./routes/guildMessage.routes.js"
 import cookieParser from "cookie-parser"
 import dotenv from "dotenv"
 import { connectDB } from "./db/db.js";
@@ -27,6 +28,7 @@ app.use("/api/auth", authRoutes)
 app.use("/api/guild", guildRoutes)
 app.use("/api/friend-request", friendRequestRoutes)
 app.use("/api/stream", streamRoutes)
+app.use("api/guildchat",guildChatRoutes)
 
 
 server.listen(PORT, (req, res) => {

@@ -99,4 +99,4 @@ export const deleteMessage = async(req,res)=>{
         console.log("Error deleting messages: ", err.message )
         res.status(500).json({message:"Internal Server Error"})
     }
-}
+} 

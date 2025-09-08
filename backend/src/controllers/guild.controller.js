@@ -24,6 +24,9 @@ export const createGuild =  async(req,res) =>{
         if(newGuild){
             await newGuild.save();
 
+            await User.findByIdAndUpdate(user._id, {
+                $addToSet: { affiliatedGuilds: newGuild._id }
+            })
 
             res.status(201).json({
                 guildName: newGuild.guildName,
@@ -46,7 +49,9 @@ export const addMembers = async(req,res) => {
     try{
             const {guildId} = req.params
             const {userIds} = req.body
+            const userId = req.user._id
 
+            
             //Check if userIds given to us is an array
             if(Array.isArray(userIds) || userIds.length === 0 )
                 return res.status(400).json({message: "UserId input must be a non-empty array"})
@@ -57,6 +62,17 @@ export const addMembers = async(req,res) => {
 
             //Fetch the guild
             const guild = await Guild.findById(guildId)
+
+            //Check if the user is allowed to add members 
+            const allowedMembers = guild.members.filter((member)=> member.role==="GuildMaster"||"Vice-GuildMaster")
+            let ind = 0
+            allowedMembers.forEach(member => {
+                if(member._id === userId) {
+                    ind++
+                }    
+            });
+
+            if(ind !== 1) return res.status(400).json({message: "Only GM or VGM can add members"})
 
             //Prevent Duplicates
             const existingUserIds = guild.members.map(m=> m.member.toString())
@@ -180,3 +196,57 @@ export const getUsersGuilds = async (req, res) => {
         res.status(500).json({ message: "Internal Server Error!!" });
     }
 };
+
+
+export const getGuildByName = async(req,res) =>{
+    try {
+        const{guildName} = req.params
+
+        const guildExists = await Guild.find({guildName})
+        if(guildExists.length===0) return res.status(400).json({message: "The desired Guild doesn't exist"})   
+            
+        const guild = guildExists[0]
+
+        res.status(200).json({
+            guild
+        })
+    } catch (error) {
+        console.log("Error getting the guild: ", error.message);
+        res.status(500).json({message: "Internal Server Error in getting the desired Guild"})
+    }
+}
+
+export const joinGuild = async(req,res) => {
+    try {
+        const {guildId} = req.params
+        const user = req.user
+
+        const guild = await Guild.findById(guildId)
+
+        if (!guild) return res.status(404).json({ message: "Guild doesn't exist or already deleted" })
+
+        if(guild.guildType === "private") return res.status(400).json({message: "Can only join a public guild"})
+
+        const alreadyMember = guild.members.some(
+            (m) => m.member.toString() === user._id.toString()
+        )
+
+        if (alreadyMember) return res.status(400).json({ message: "You are already a member" })
+
+        guild.members.push({
+            member: user._id,
+            role: "GuildMember"
+        })
+
+        await guild.save()
+
+        res.status(200).json({
+            message: "Joined guild successfully",
+            guild,
+        })
+
+    } catch (error) {
+        console.log("Error joining Guild: ", error.message);
+        res.status(500).json({message: "Internal Server Error in joining the guild"})
+    }
+}
