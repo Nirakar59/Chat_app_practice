@@ -30,8 +30,10 @@ const SignupPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault()
     const success = validateInput()
-    if (success) signup(formData)
-    navigate("/")
+    if (success) {
+      signup(formData)
+      navigate("/")
+    }
   }
 
   return (

@@ -29,7 +29,6 @@ export const useGuildStore = create((set, get) => ({
         try {
             const res = await axiosInstance.get(`guild/getbyid/${guildName}`)
             set({selectedGuild: res.data.guild})
-            console.log(get().selectedGuild)
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to fetch the desired guild");
         }
@@ -84,6 +83,7 @@ export const useGuildStore = create((set, get) => ({
         try {
             const res = await axiosInstance.put(`/guild/joinguild/${guildId}`)
             set({selectedGuild: res.data})
+            
             toast.success("Guild Joined ✅")
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to join the guild");

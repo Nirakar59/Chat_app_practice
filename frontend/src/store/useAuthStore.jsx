@@ -1,110 +1,127 @@
 import { create } from "zustand"
+import { persist, createJSONStorage } from "zustand/middleware"
 import { axiosInstance } from "../lib/axios"
-import toast from 'react-hot-toast'
-import {io} from 'socket.io-client'
+import { io } from "socket.io-client"
+import toast from "react-hot-toast"
 
 const BASE_URL = "http://localhost:5001"
 
-export const useAuthStore = create((set,get)=>({
-    authUser: null,
-    isLoading: false,
-    isSigningUp: false,
-    isUpdatingProfile: false,
-    isLogginIn: false,
-    isCheckingAuth: true,
-    onlineUsers: [],
-    socket: null,
+export const useAuthStore = create(
+  persist(
+    (set, get) => ({
+      authUser: null,
+      socket: null,
+      onlineUsers: [],
+      isLoading: false,
+      isLogginIn: false,
+      isSigningUp: false,
+      isUpdatingProfile: false,
+      isCheckingAuth: false,
 
-    checkAuth: async()=>{
+      checkAuth: async () => {
         try {
-            const res = await axiosInstance.get("/auth/checkauth");
-            set({authUser: res.data})
+          const res = await axiosInstance.get("/auth/checkauth")
+          set({ authUser: res.data })
+          if (!get().socket) {
             get().connectSocket()
+          }
         } catch (error) {
-            console.log("error in checkauth: ", error);
-            
-            set({authUser: null})
+          console.log("error in checkauth: ", error)
+          set({ authUser: null })
+        } finally {
+          set({ isCheckingAuth: false })
         }
-        finally{
-            set({isCheckingAuth:false})
-        }
-    },
+      },
 
-    signup: async(data)=>{
-        set({isSigningUp: true})
+      login: async (data) => {
+        set({ isLogginIn: true })
         try {
-            const res = await axiosInstance.post("/auth/signup", data)
-            set({authUser:res.data})
-            get().connectSocket()
-            toast.success("Account Created Succesfully")
+          const res = await axiosInstance.post("/auth/login", data)
+          set({ authUser: res.data })
+          get().disconnectSocket()
+          get().connectSocket()
+          toast.success("Logged In Successfully")
         } catch (error) {
-            toast.error(error.response.data.message)
+          toast.error(error.response.data.message)
+        } finally {
+          set({ isLogginIn: false })
         }
-        finally{
-            set({isSigningUp:false})
-        }
-    },
+      },
 
-    login: async(data)=>{
-        set({isLogginIn:true})
+      signup: async (data) => {
+        set({ isSigningUp: true })
         try {
-            const res = await axiosInstance.post("/auth/login", data)
-            set({authUser:res.data})
-            get().connectSocket()            
-            toast.success("Logged In Succesfully")
+          const res = await axiosInstance.post("/auth/signup", data)
+          set({ authUser: res.data })
+          get().disconnectSocket()
+          get().connectSocket()
+          toast.success("Account Created Successfully")
         } catch (error) {
-            toast.error(error.response.data.message) 
+          toast.error(error.response.data.message)
+        } finally {
+          set({ isSigningUp: false })
         }
-        finally{
-            set({isLogginIn:false})
-        }
-    },
-    
-    logout:async()=>{
+      },
+
+      logout: async () => {
         try {
-            await axiosInstance.post("/auth/logout")
-            set({authUser:null})
-            get().disconnectSocket()
-            toast.success("Logged out Succesfully")
+          await axiosInstance.post("/auth/logout")
+          get().disconnectSocket()
+          set({ authUser: null, socket: null })
+          get().persist.clearStorage()
+          toast.success("Logged out Successfully")
         } catch (error) {
-            toast.error(error.response.data.message)
+          toast.error(error.response.data.message)
         }
-    },
+      },
 
-    updateProfile:async(Image)=>{
-        set({isUpdatingProfile: true})
-        try {
-            await axiosInstance.put("/auth/updateprofile", Image)
-            toast.success("Profile Picture Updated Succesfully")
-            
-        } catch (error) {
-            toast.error(error.response.data.message)
-        }
-        finally{
-            set({isUpdatingProfile: false})
-        }
-    } ,
+      connectSocket: () => {
+        const { authUser, socket } = get()
+        if (!authUser || socket) return
 
-    connectSocket: ()=>{
-        
-        const{authUser} = get()
-
-        if(!authUser || get().socket?.connected) return;
-
-        const socket = io(BASE_URL,{
-            query: {
-                userId: authUser._id
-            }
+        const newSocket = io(BASE_URL, {
+          auth: { userId: authUser._id }, // use auth instead of query
+          transports: ["websocket"],
+          withCredentials: true,
         })
-        socket.connect()
-        set({socket:socket})
 
-        socket.on("getOnlineUsers", (userIds)=>{
-            set({onlineUsers:userIds})
+        newSocket.on("connect", () => {
+          console.log("✅ Socket connected:", newSocket.id)
         })
-    },
+        newSocket.on("connect_error", (err) => {
+          console.error("❌ Socket connect error:", err.message)
+          toast.error("Socket connection failed: " + err.message)
+        })
 
-    disconnectSocket: ()=>{
-        if(get().socket?.connected) get().socket.disconnect()
+        newSocket.on("getOnlineUsers", (userIds) => {
+          set({ onlineUsers: userIds })
+        })
+
+        set({ socket: newSocket })
+      },
+
+      disconnectSocket: () => {
+        const s = get().socket
+        if (!s) {
+          set({ socket: null, onlineUsers: [] })
+          return
+        }
+        try {
+          s.off("getOnlineUsers")
+          s.off("connect")
+          s.off("connect_error")
+          s.disconnect()
+        } catch (e) {
+          console.warn("Error while disconnecting socket", e)
+        } finally {
+          set({ socket: null, onlineUsers: [] })
+        }
+      },
+    }),
+    {
+      name: "auth-store",
+      storage: createJSONStorage(() => sessionStorage),
+      partialize: (state) => ({ authUser: state.authUser }),
     }
-}))
+  )
+)

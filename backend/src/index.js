@@ -28,7 +28,7 @@ app.use("/api/auth", authRoutes)
 app.use("/api/guild", guildRoutes)
 app.use("/api/friend-request", friendRequestRoutes)
 app.use("/api/stream", streamRoutes)
-app.use("api/guildchat",guildChatRoutes)
+app.use("/api/guildchat",guildChatRoutes)
 
 
 server.listen(PORT, (req, res) => {

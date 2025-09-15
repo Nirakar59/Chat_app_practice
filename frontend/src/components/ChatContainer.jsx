@@ -15,15 +15,16 @@ const ChatContainer = () => {
     getmessage,
     subscribeToMessages,
     unsubscribeToMessages,
-    deleteChat,
   } = useMessageStore()
   const messagesEndRef = useRef(null)
 
   useEffect(() => {
+    console.log("Chat container ko useEffect chaliraxa");
+    
     getmessage(selectedUser._id)
     subscribeToMessages()
     return () => unsubscribeToMessages()
-  }, [getmessage, selectedUser, subscribeToMessages, unsubscribeToMessages, deleteChat])
+  }, [getmessage, selectedUser, subscribeToMessages, unsubscribeToMessages])
 
   // Scroll to bottom whenever messages change
   useEffect(() => {

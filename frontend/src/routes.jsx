@@ -9,6 +9,7 @@ import {ProtectedRoute, ToHomePage} from "./components/protectedRoute";
 import HomePage from "./pages/HomePage";
 import AllGuilds from "./pages/AllGuilds";
 import GuildPage from "./pages/GuildPage";
+import GuildChat from "./pages/GuildChat";
 
 
 const router = createBrowserRouter(
@@ -34,6 +35,14 @@ const router = createBrowserRouter(
                     )
                 },
                 {
+                    path: ":guildName/guildchat",
+                    element: (
+                        <ProtectedRoute>
+                            <GuildChat />
+                        </ProtectedRoute>
+                    )
+                },
+                {
                     path: "messenger",
                     element: (
                         <ProtectedRoute>
@@ -47,17 +56,7 @@ const router = createBrowserRouter(
                         <ProtectedRoute>
                             <AllGuilds />
                         </ProtectedRoute>
-                    ),
-                    children:[
-                        {
-                            path: ":id",
-                            element: (
-                                <ProtectedRoute>
-                                    <GuildPage />
-                                </ProtectedRoute>
-                            )
-                        }
-                    ]
+                    )
                 },
                 
                 {

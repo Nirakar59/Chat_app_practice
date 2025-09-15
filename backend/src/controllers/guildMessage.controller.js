@@ -1,9 +1,11 @@
 import cloudinary from "../lib/cloudinary.js";
+import { getReceiverSocketId, io } from "../lib/socket.js";
 import Guild from "../models/guild.model.js";
 import GuildMessage from "../models/guildMessage.model.js";
 
 export const getChat = async(req,res) => {
     try{
+        
         const user = req.user
         const {guildId} = req.params
 
@@ -17,9 +19,12 @@ export const getChat = async(req,res) => {
 
         if(!alreadyMember) return res.status(400).json({message:`You are not a member of ${guild.guildName} `})
 
-        const guildChat = await GuildMessage.find({guildId})
+        const chat = await GuildMessage.find({ guildId })
+            .populate("senderId", "fullName profilePic")
+            .sort({ createdAt: 1 });
 
-        res.status(200).json({guildChat})
+        res.status(200).json({chat})
+        
     }
     catch(error){
         console.log("Error getting the chat: ", error.message);
@@ -40,16 +45,21 @@ export const sendMessage = async(req,res) => {
             imgUrl = uploadResponse.secure_url
         }
 
-        const newMessage = new GuildMessage({
+        let newMessage = new GuildMessage({
             guildId,
             senderId: user._id,
-            message: text,
+            text: text,
             image: imgUrl
         })
 
         await newMessage.save()
 
-        //Todo: implement socket 
+        newMessage = await newMessage.populate("senderId", "fullName profilePic")
+
+        io.to(guildId).emit("newMessageForGuild", newMessage)
+        const sId = getReceiverSocketId(user._id)
+        console.log(`Mssg emitted from user : ${sId} guild with id : ${guildId}`)
+
 
         res.status(200).json({newMessage})
     }

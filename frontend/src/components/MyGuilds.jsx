@@ -19,7 +19,6 @@ const MyGuilds = () => {
     getGuilds();
   }, [getGuilds]);
 
-  console.log(guilds);
 
   return (
     <div>
@@ -78,6 +77,7 @@ const MyGuilds = () => {
                         <button
                          onClick={()=>{
                             setSelectedGuild(guild)
+                            
                             navigate(`/${guild.guildName}`)
                          }}
                          className="cursor-pointer p-2 rounded hover:bg-green-500 hover:text-black transition-colors">

@@ -29,8 +29,12 @@ export const useMessageStore = create((set, get)=>(
         getmessage: async (userId) => {
             set({isLoadingMessages:true})
             try {
+                console.log("Hunxa ta mssg get?");
+                
                 const res = await axiosInstance.get(`/message/${userId}`)
                 set({messages:res.data})
+                console.log("Vayo hai ta mssg get");
+                
             } catch (error) {
                 toast.error(error.response.data.message)
             }      
@@ -71,8 +75,9 @@ export const useMessageStore = create((set, get)=>(
 
         subscribeToMessages : ()=>{
             const{selectedUser} = get()
+            
             if(!selectedUser) return
- 
+            
             const socket = useAuthStore.getState().socket
             socket.on("newMessage", (newMessage)=>{
                 if(newMessage.senderId !== selectedUser._id) return

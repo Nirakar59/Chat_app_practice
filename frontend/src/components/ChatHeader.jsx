@@ -1,7 +1,7 @@
 import { Trash, X } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useMessageStore } from "../store/useMessageStore";
-
+ 
 const ChatHeader = () => {
     const { selectedUser, setSelectedUser, deleteChat } = useMessageStore();
     const { onlineUsers } = useAuthStore();

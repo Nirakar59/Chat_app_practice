@@ -1,3 +1,4 @@
+import { text } from "express";
 import mongoose from "mongoose";
 
 const guildMessageSchema =  mongoose.Schema(
@@ -12,7 +13,7 @@ const guildMessageSchema =  mongoose.Schema(
             ref: "User",
             required: true
         },
-        message: {
+        text: {
             type:String,
         },
         image: {

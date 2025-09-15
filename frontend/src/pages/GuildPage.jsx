@@ -1,21 +1,32 @@
 import React, { useEffect } from 'react';
 import { useGuildStore } from '../store/useGuildStore';
-import { useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { User, Eye, MessageCircle } from 'lucide-react';
+import { useAuthStore } from '../store/useAuthStore';
 
 const GuildPage = () => {
   const { guildName } = useParams();
-  const { selectedGuild, getGuildByName } = useGuildStore();
+  const { selectedGuild, getGuildByName } = useGuildStore()
+  const {socket} = useAuthStore()
+  const navigate = useNavigate()
 
   useEffect(() => {
     getGuildByName(guildName);
-  }, [getGuildByName, guildName]);
+  }, [getGuildByName, guildName])
+
+  useEffect(()=> {
+    if(!socket) return
+  },[socket])
 
   if (!selectedGuild) {
     return <div className="text-center mt-20 text-gray-500">Loading guild...</div>;
   }
 
   const guild = selectedGuild;
+   
+  const handleJoinChat = () =>{
+    navigate("guildchat")
+  }
 
   return (
     <div className="p-6">
@@ -27,7 +38,7 @@ const GuildPage = () => {
 
         {/* Chat Button (always visible) */}
         <button
-          onClick={() => console.log("Open Chat")} // <-- replace with your handler
+          onClick={handleJoinChat} // <-- replace with your handler
           className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition"
         >
           <MessageCircle size={18} />

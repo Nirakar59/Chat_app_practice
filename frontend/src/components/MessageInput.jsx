@@ -2,13 +2,17 @@ import React, { useRef, useState } from 'react'
 import { useMessageStore } from '../store/useMessageStore'
 import {Image, X, Send} from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useGuildMessageStore } from '../store/useGuildMessageStore'
+import { useGuildStore } from '../store/useGuildStore'
 
-const MessageInput = () => {
+const MessageInput = ({page}) => {
 
   const [text, setText] = useState("")
   const[imagePreview, setImagePreview] = useState(null)
   const fileINputRef = useRef(null)
   const{sendMessage} = useMessageStore()
+  const { sendMessageToGuild } = useGuildMessageStore()
+  const {selectedGuild} = useGuildStore()
 
   const handleSubmit = async(e)=>{
     e.preventDefault()
@@ -18,10 +22,20 @@ const MessageInput = () => {
     }
 
     try {
-      await sendMessage({
-        text: text.trim(),
-        image: imagePreview
-      })
+      page === "Guild"? (
+        await sendMessageToGuild(
+          selectedGuild._id,{
+            text: text.trim(),
+            img: imagePreview
+          }
+        )
+      ):(
+        await sendMessage({
+          text: text.trim(),
+          image: imagePreview
+        })
+      )
+      
 
       setText("")
       setImagePreview(null)
