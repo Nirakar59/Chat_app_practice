@@ -5,9 +5,7 @@ const chatSchema = mongoose.Schema({
     streamId: { type: mongoose.Schema.Types.ObjectId, ref: "Stream" },
     senderId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     message: String,
-}, { timestamps: true });
-
-
+}, { timestamps: true })
 
 const streamSchema =  mongoose.Schema(
     {

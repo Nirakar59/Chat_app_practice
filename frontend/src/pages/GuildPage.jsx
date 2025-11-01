@@ -1,95 +1,311 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useGuildStore } from '../store/useGuildStore';
 import { useNavigate, useParams } from 'react-router';
-import { User, Eye, MessageCircle } from 'lucide-react';
+import { User, Eye, MessageCircle, Settings, Users, Crown, Shield, Video, UserPlus, UserMinus, Edit2, Trash2 } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
+import EditGuildModal from '../components/EditGuildModal';
+import ManageMembersModal from '../components/ManageMembersModal';
+import toast from 'react-hot-toast';
 
 const GuildPage = () => {
   const { guildName } = useParams();
-  const { selectedGuild, getGuildByName } = useGuildStore()
-  const {socket} = useAuthStore()
-  const navigate = useNavigate()
+  const { selectedGuild, getGuildByName } = useGuildStore();
+  const { authUser, socket } = useAuthStore();
+  const navigate = useNavigate();
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showMembersModal, setShowMembersModal] = useState(false);
+  const [userRole, setUserRole] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getGuildByName(guildName);
-  }, [getGuildByName, guildName])
+    const fetchGuild = async () => {
+      setLoading(true);
+      await getGuildByName(guildName);
+      setLoading(false);
+    };
+    fetchGuild();
+  }, [getGuildByName, guildName]);
 
-  useEffect(()=> {
-    if(!socket) return
-  },[socket])
+  useEffect(() => {
+    if (selectedGuild && authUser) {
+      // Find user's role in this guild
+      const member = selectedGuild.members.find(
+        m => m.member._id === authUser._id
+      );
+      setUserRole(member?.role || null);
+    }
+  }, [selectedGuild, authUser]);
+
+  useEffect(() => {
+    if (!socket) return;
+  }, [socket]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-base-200 flex items-center justify-center">
+        <span className="loading loading-spinner loading-lg"></span>
+      </div>
+    );
+  }
 
   if (!selectedGuild) {
-    return <div className="text-center mt-20 text-gray-500">Loading guild...</div>;
+    return (
+      <div className="min-h-screen bg-base-200 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Guild Not Found</h2>
+          <button onClick={() => navigate('/')} className="btn btn-primary">
+            Go Home
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const guild = selectedGuild;
-   
-  const handleJoinChat = () =>{
-    navigate("guildchat")
-  }
+  const isGuildMaster = userRole === 'GuildMaster';
+  const isViceGuildMaster = userRole === 'Vice-GuildMaster';
+  const isStreamer = userRole === 'Streamer';
+  const canManage = isGuildMaster || isViceGuildMaster;
+
+  const handleJoinChat = () => {
+    navigate("guildchat");
+  };
+
+  const handleStartStream = () => {
+    if (!isStreamer && !isGuildMaster) {
+      toast.error("Only Streamers and GuildMaster can start streams");
+      return;
+    }
+    navigate('/stream/start', {
+      state: {
+        guildId: guild._id,
+        guildName: guild.guildName,
+        streamType: 'Guild-Based'
+      }
+    });
+  };
+
+  const getRoleBadge = (role) => {
+    const badges = {
+      'GuildMaster': { icon: Crown, color: 'badge-warning', label: 'Guild Master' },
+      'Vice-GuildMaster': { icon: Shield, color: 'badge-info', label: 'Vice GM' },
+      'Streamer': { icon: Video, color: 'badge-secondary', label: 'Streamer' },
+      'GuildMember': { icon: User, color: 'badge-ghost', label: 'Member' }
+    };
+    const badge = badges[role] || badges['GuildMember'];
+    const Icon = badge.icon;
+    return (
+      <span className={`badge ${badge.color} gap-1`}>
+        <Icon size={12} />
+        {badge.label}
+      </span>
+    );
+  };
 
   return (
-    <div className="p-6">
-      {/* Guild Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h5 className="text-3xl font-bold">{guild.guildName}</h5>
-        </div>
-
-        {/* Chat Button (always visible) */}
-        <button
-          onClick={handleJoinChat} // <-- replace with your handler
-          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition"
-        >
-          <MessageCircle size={18} />
-          Chat
-        </button>
-      </div>
-
-      {/* Streams Grid */}
-      {guild.streams && guild.streams.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {guild.streams.map((stream) => (
-            <div
-              key={stream._id}
-              className="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-xl transition cursor-pointer"
-            >
-              {/* Stream Thumbnail */}
-              <img
-                src={stream.thumbnailUrl || "https://via.placeholder.com/400x200?text=No+Thumbnail"}
-                alt={stream.title}
-                className="w-full h-48 object-cover"
-              />
-
-              {/* Stream Info */}
-              <div className="p-4">
-                <h2 className="text-lg font-semibold">{stream.title}</h2>
-                <p className="text-sm text-gray-500 mb-2">{stream.description || "No description"}</p>
-
-                <div className="flex items-center justify-between text-gray-600 text-sm">
-                  {/* Host */}
-                  <div className="flex items-center gap-1">
-                    <User size={16} />
-                    <span>{stream.hostId?.username || "Host"}</span>
-                  </div>
-
-                  {/* Viewer Count */}
-                  <div className="flex items-center gap-1">
-                    <Eye size={16} />
-                    <span>{stream.viewerCount}</span>
-                  </div>
+    <div className="min-h-screen bg-base-200">
+      {/* Header */}
+      <div className="bg-base-100 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            {/* Guild Info */}
+            <div className="flex items-center gap-4">
+              <div className="avatar">
+                <div className="w-20 h-20 rounded-lg">
+                  <img
+                    src={guild.guildIcon || "https://via.placeholder.com/150"}
+                    alt={guild.guildName}
+                  />
                 </div>
-
-                {/* Join Stream Button */}
-                <button className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md transition">
-                  Join Stream
-                </button>
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold">{guild.guildName}</h1>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="badge badge-primary">{guild.guildType}</span>
+                  {userRole && getRoleBadge(userRole)}
+                  <span className="text-sm opacity-70">
+                    {guild.members?.length || 0} members
+                  </span>
+                </div>
               </div>
             </div>
-          ))}
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-2">
+              {/* Chat Button - Always visible to members */}
+              <button
+                onClick={handleJoinChat}
+                className="btn btn-primary gap-2"
+              >
+                <MessageCircle size={18} />
+                Guild Chat
+              </button>
+
+              {/* Stream Button - Only for Streamers and GuildMaster */}
+              {(isStreamer || isGuildMaster) && (
+                <button
+                  onClick={handleStartStream}
+                  className="btn btn-secondary gap-2"
+                >
+                  <Video size={18} />
+                  Start Stream
+                </button>
+              )}
+
+              {/* Manage Members - Only for GM and VGM */}
+              {canManage && (
+                <button
+                  onClick={() => setShowMembersModal(true)}
+                  className="btn btn-ghost gap-2"
+                >
+                  <Users size={18} />
+                  Manage
+                </button>
+              )}
+
+              {/* Edit Guild - Only for GuildMaster */}
+              {isGuildMaster && (
+                <button
+                  onClick={() => setShowEditModal(true)}
+                  className="btn btn-ghost gap-2"
+                >
+                  <Settings size={18} />
+                  Edit
+                </button>
+              )}
+            </div>
+          </div>
         </div>
-      ) : (
-        <div className="text-center text-gray-500 mt-10">No streams available yet.</div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Streams Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+            <Video className="w-6 h-6" />
+            Guild Streams
+          </h2>
+
+          {guild.streams && guild.streams.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {guild.streams.map((stream) => (
+                <div
+                  key={stream._id}
+                  onClick={() => navigate(`/stream/${stream._id}`)}
+                  className="card bg-base-100 shadow-xl cursor-pointer hover:shadow-2xl transition"
+                >
+                  <figure className="aspect-video bg-black relative">
+                    <img
+                      src={stream.thumbnailUrl || "https://via.placeholder.com/400x200?text=Live+Stream"}
+                      alt={stream.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-2 left-2 badge badge-error gap-1">
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                      LIVE
+                    </div>
+                    <div className="absolute top-2 right-2 badge badge-ghost gap-1">
+                      <Eye size={12} />
+                      {stream.viewerCount}
+                    </div>
+                  </figure>
+                  <div className="card-body">
+                    <h3 className="card-title">{stream.title}</h3>
+                    <p className="text-sm opacity-70">{stream.description || "No description"}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="avatar">
+                        <div className="w-6 h-6 rounded-full">
+                          <img src={stream.hostId?.profilePic || '/avatar.png'} alt="Host" />
+                        </div>
+                      </div>
+                      <span className="text-sm">{stream.hostId?.fullName || "Host"}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-base-100 rounded-lg">
+              <Video className="w-16 h-16 mx-auto mb-4 opacity-30" />
+              <h3 className="text-xl font-semibold mb-2 opacity-70">No Active Streams</h3>
+              <p className="opacity-50 mb-4">
+                {isStreamer || isGuildMaster
+                  ? "Start streaming to engage with guild members!"
+                  : "No one is streaming right now. Check back later!"}
+              </p>
+              {(isStreamer || isGuildMaster) && (
+                <button onClick={handleStartStream} className="btn btn-primary gap-2">
+                  <Video size={18} />
+                  Start Streaming
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Members Section */}
+        <div>
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+            <Users className="w-6 h-6" />
+            Guild Members ({guild.members?.length || 0})
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {guild.members?.map((member) => (
+              <div
+                key={member.member._id}
+                className="card bg-base-100 shadow-md hover:shadow-lg transition"
+              >
+                <div className="card-body p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="avatar">
+                      <div className="w-12 h-12 rounded-full">
+                        <img
+                          src={member.member.profilePic || '/avatar.png'}
+                          alt={member.member.fullName}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold truncate">{member.member.fullName}</h3>
+                      <p className="text-xs opacity-70 truncate">{member.member.email}</p>
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    {getRoleBadge(member.role)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Modals */}
+      {isGuildMaster && (
+        <>
+          <EditGuildModal
+            isOpen={showEditModal}
+            onClose={() => setShowEditModal(false)}
+            guild={guild}
+          />
+          <ManageMembersModal
+            isOpen={showMembersModal}
+            onClose={() => setShowMembersModal(false)}
+            guild={guild}
+          />
+        </>
+      )}
+
+      {canManage && !isGuildMaster && (
+        <ManageMembersModal
+          isOpen={showMembersModal}
+          onClose={() => setShowMembersModal(false)}
+          guild={guild}
+          isViceGM={true}
+        />
       )}
     </div>
   );
