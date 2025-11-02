@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Monitor, Mic, MicOff, Video, VideoOff, Play, Square, ArrowLeft, AlertCircle, Eye } from 'lucide-react';
+import { Camera, Monitor, Mic, MicOff, Video, VideoOff, Play, Square, ArrowLeft, AlertCircle, Eye, Users, Send } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
 import { axiosInstance } from '../lib/axios';
@@ -27,10 +27,13 @@ const StreamerPage = () => {
   const [status, setStatus] = useState('');
   const [viewerCount, setViewerCount] = useState(0);
   const [streamData, setStreamData] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [messageInput, setMessageInput] = useState('');
 
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const mediaRecorderRef = useRef(null);
+  const chatEndRef = useRef(null);
   const [guilds, setGuilds] = useState([]);
 
   useEffect(() => {
@@ -59,7 +62,13 @@ const StreamerPage = () => {
         console.log('Video autoplay prevented:', err);
       });
     }
-  }, [setupComplete]); // Re-run when setupComplete changes (when video element is rendered)
+  }, [setupComplete]);
+
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
 
   useEffect(() => {
     if (!socket || !streamData) return;
@@ -77,10 +86,15 @@ const StreamerPage = () => {
       toast.error(err);
     });
 
+    socket.on('new-stream-chat', (msg) => {
+      setMessages(prev => [...prev, msg]);
+    });
+
     return () => {
       socket.off('viewer-joined');
       socket.off('viewer-left');
       socket.off('stream-error');
+      socket.off('new-stream-chat');
     };
   }, [socket, streamData]);
 
@@ -115,9 +129,7 @@ const StreamerPage = () => {
         }
       }
 
-      // Store the stream
       streamRef.current = stream;
-
       setStatus('Capture started - Ready to stream');
       return stream;
     } catch (err) {
@@ -141,7 +153,6 @@ const StreamerPage = () => {
     try {
       const stream = await startCapture();
       if (stream) {
-        // Set setupComplete FIRST to render the video element
         setSetupComplete(true);
         setError('');
         setStatus('Ready to stream');
@@ -173,12 +184,14 @@ const StreamerPage = () => {
       const { stream } = response.data;
       setStreamData(stream);
 
+      // Fetch initial chat
+      const chatRes = await axiosInstance.get(`/stream/${stream._id}/chat`);
+      setMessages(chatRes.data.chat);
+
       setStatus('Connecting...');
 
-      // Join stream room
       socket.emit('join-stream-room', { roomId: stream.roomId });
 
-      // Start browser stream
       socket.emit('start-browser-stream', {
         streamId: stream._id,
         roomId: stream.roomId
@@ -189,7 +202,6 @@ const StreamerPage = () => {
         setIsStreaming(true);
         toast.success('Stream started successfully!');
 
-        // Start MediaRecorder with optimized settings for low latency
         let mimeType = 'video/webm;codecs=vp8,opus';
         if (!MediaRecorder.isTypeSupported(mimeType)) {
           const types = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8', 'video/webm'];
@@ -211,7 +223,6 @@ const StreamerPage = () => {
 
         mediaRecorderRef.current.ondataavailable = (event) => {
           if (event.data && event.data.size > 0 && socket) {
-            // Convert blob to array buffer and send
             event.data.arrayBuffer().then(buffer => {
               socket.emit('stream-data', {
                 roomId: stream.roomId,
@@ -221,7 +232,7 @@ const StreamerPage = () => {
           }
         };
 
-        mediaRecorderRef.current.start(500); // Send data every 500ms for lower latency
+        mediaRecorderRef.current.start(500);
       });
 
     } catch (err) {
@@ -253,6 +264,7 @@ const StreamerPage = () => {
       setIsStreaming(false);
       setSetupComplete(false);
       setStreamData(null);
+      setMessages([]);
       toast.success('Stream stopped');
     } catch (err) {
       console.error('Error stopping stream:', err);
@@ -277,6 +289,19 @@ const StreamerPage = () => {
         track.enabled = !videoEnabled;
       });
       setVideoEnabled(!videoEnabled);
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!messageInput.trim() || !streamData) return;
+
+    try {
+      await axiosInstance.post(`/stream/${streamData._id}/chat`, {
+        message: messageInput
+      });
+      setMessageInput('');
+    } catch (err) {
+      toast.error('Failed to send message');
     }
   };
 
@@ -437,8 +462,8 @@ const StreamerPage = () => {
 
   return (
     <div className="min-h-screen bg-base-200">
-      <div className="max-w-5xl mx-auto p-6 pt-20">
-        <div className="flex items-center justify-between mb-6">
+      <div className="max-w-7xl mx-auto p-4 pt-20">
+        <div className="flex items-center justify-between mb-4">
           <button
             onClick={() => navigate('/')}
             className="btn btn-ghost gap-2"
@@ -464,80 +489,145 @@ const StreamerPage = () => {
           </div>
         )}
 
-        <div className="bg-base-100 rounded-lg overflow-hidden shadow-xl mb-6">
-          <div className="aspect-video bg-black relative">
-            {/* Raw camera/screen feed - real-time, no delay, muted (no echo) */}
-            <video
-              ref={videoRef}
-              autoPlay
-              muted
-              playsInline
-              className="w-full h-full object-cover"
-            />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Video Player */}
+          <div className="lg:col-span-2">
+            <div className="bg-base-100 rounded-lg overflow-hidden shadow-xl mb-4">
+              <div className="aspect-video bg-black relative">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
 
-            {!videoEnabled && (
-              <div className="absolute inset-0 bg-base-300 flex items-center justify-center">
-                <VideoOff className="w-16 h-16 text-base-content/50" />
+                {!videoEnabled && (
+                  <div className="absolute inset-0 bg-base-300 flex items-center justify-center">
+                    <VideoOff className="w-16 h-16 text-base-content/50" />
+                  </div>
+                )}
+                {isStreaming && (
+                  <>
+                    <div className="absolute top-4 left-4 bg-error px-3 py-2 rounded-lg flex items-center gap-2">
+                      <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
+                      <span className="text-sm font-bold text-white">STREAMING</span>
+                    </div>
+                    <div className="absolute top-4 right-4 bg-black/70 px-3 py-2 rounded-lg flex items-center gap-2">
+                      <Eye className="w-4 h-4 text-white" />
+                      <span className="text-sm text-white">{viewerCount}</span>
+                    </div>
+                  </>
+                )}
+                {status && (
+                  <div className="absolute bottom-4 left-4 bg-black/70 px-3 py-2 rounded-lg">
+                    <span className="text-sm text-white">{status}</span>
+                  </div>
+                )}
               </div>
-            )}
-            {isStreaming && (
-              <>
-                <div className="absolute top-4 left-4 bg-error px-3 py-2 rounded-lg flex items-center gap-2">
-                  <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
-                  <span className="text-sm font-bold text-white">STREAMING</span>
+              <div className="p-4">
+                <h2 className="text-xl font-bold mb-2">{streamConfig.title}</h2>
+                <div className="flex items-center gap-4 text-sm opacity-70">
+                  <span>{streamConfig.streamType}</span>
+                  <span>•</span>
+                  <span>{streamConfig.category}</span>
+                  {isStreaming && <span className="text-success">● Live</span>}
                 </div>
-                <div className="absolute top-4 right-4 bg-black/70 px-3 py-2 rounded-lg flex items-center gap-2">
-                  <Eye className="w-4 h-4 text-white" />
-                  <span className="text-sm text-white">{viewerCount}</span>
-                </div>
-              </>
-            )}
-            {status && (
-              <div className="absolute bottom-4 left-4 bg-black/70 px-3 py-2 rounded-lg">
-                <span className="text-sm text-white">{status}</span>
               </div>
-            )}
-          </div>
-          <div className="p-4">
-            <h2 className="text-xl font-bold mb-2">{streamConfig.title}</h2>
-            <div className="flex items-center gap-4 text-sm opacity-70">
-              <span>{streamConfig.streamType}</span>
-              <span>•</span>
-              <span>{streamConfig.category}</span>
-              {isStreaming && <span className="text-success">● Live</span>}
+            </div>
+
+            <div className="flex items-center justify-center gap-4">
+              <button
+                onClick={toggleAudio}
+                className={`btn btn-circle ${audioEnabled ? 'btn-ghost' : 'btn-error'}`}
+              >
+                {audioEnabled ? <Mic className="w-6 h-6" /> : <MicOff className="w-6 h-6" />}
+              </button>
+              <button
+                onClick={toggleVideo}
+                className={`btn btn-circle ${videoEnabled ? 'btn-ghost' : 'btn-error'}`}
+              >
+                {videoEnabled ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
+              </button>
+              {!isStreaming ? (
+                <button
+                  onClick={startStreaming}
+                  className="btn btn-success gap-2 px-8"
+                >
+                  <Play className="w-5 h-5" />
+                  Start Streaming
+                </button>
+              ) : (
+                <button
+                  onClick={stopStreaming}
+                  className="btn btn-error gap-2 px-8"
+                >
+                  <Square className="w-5 h-5" />
+                  Stop Streaming
+                </button>
+              )}
             </div>
           </div>
-        </div>
 
-        <div className="flex items-center justify-center gap-4">
-          <button
-            onClick={toggleAudio}
-            className={`btn btn-circle ${audioEnabled ? 'btn-ghost' : 'btn-error'}`}
-          >
-            {audioEnabled ? <Mic className="w-6 h-6" /> : <MicOff className="w-6 h-6" />}
-          </button>
-          <button
-            onClick={toggleVideo}
-            className={`btn btn-circle ${videoEnabled ? 'btn-ghost' : 'btn-error'}`}
-          >
-            {videoEnabled ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
-          </button>
-          {!isStreaming ? (
-            <button
-              onClick={startStreaming}
-              className="btn btn-success gap-2 px-8"
-            >
-              <Play className="w-5 h-5" />
-              Start Streaming
-            </button>
-          ) : (
-            <button
-              onClick={stopStreaming}
-              className="btn btn-error gap-2 px-8"
-            >
-              <Square className="w-5 h-5" />
-              Stop Streaming
-            </button>
+          {/* Chat */}
+          {isStreaming && (
+            <div className="bg-base-100 rounded-lg shadow-xl flex flex-col h-[600px]">
+              <div className="p-4 border-b border-base-300">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Live Chat
+                </h3>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {messages.length === 0 && (
+                  <div className="text-center text-sm opacity-50 mt-8">
+                    No messages yet. Chat with your viewers!
+                  </div>
+                )}
+                {messages.map((msg, idx) => (
+                  <div key={idx} className="text-sm">
+                    <div className="flex items-start gap-2">
+                      <div className="avatar">
+                        <div className="w-6 h-6 rounded-full">
+                          <img
+                            src={msg.senderId?.profilePic || '/avatar.png'}
+                            alt={msg.senderId?.fullName}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <span className="font-semibold text-primary">
+                          {msg.senderId?.fullName || 'User'}:
+                        </span>{' '}
+                        <span className="break-words">{msg.message}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <div ref={chatEndRef} />
+              </div>
+
+              <div className="p-4 border-t border-base-300">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={messageInput}
+                    onChange={(e) => setMessageInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                    placeholder="Send a message..."
+                    className="input input-bordered flex-1"
+                  />
+                  <button
+                    onClick={sendMessage}
+                    className="btn btn-primary"
+                    disabled={!messageInput.trim()}
+                  >
+                    <Send className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>
