@@ -9,8 +9,12 @@ const ProfilePage = () => {
   const handleImage = (e) => {
     e.preventDefault()
     const img = e.target.files?.[0]
+    console.log("Chaldiaxa ");
+    
     if (!img) return
 
+    console.log("Ya ni pugo");
+    
     const reader = new FileReader()
     reader.readAsDataURL(img)
 

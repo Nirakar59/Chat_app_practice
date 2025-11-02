@@ -75,6 +75,20 @@ export const useAuthStore = create(
         }
       },
 
+      updateProfile: async(img) => {
+        set({isUpdatingProfile: true})
+        try {
+          const res = await axiosInstance.put("/auth/updateprofile", img)
+          console.log(res.data);
+          
+        } catch (error) {
+          toast.error(error?.message || "Profile picture updation failed")
+        }
+        finally{
+          set({isUpdatingProfile:false})
+        }
+      },
+
       connectSocket: () => {
         const { authUser, socket } = get()
         if (!authUser || socket) return

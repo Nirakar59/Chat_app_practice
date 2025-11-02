@@ -5,6 +5,7 @@ import guildRoutes from "./routes/guild.routes.js"
 import friendRequestRoutes from "./routes/friendRequest.route.js"
 import streamRoutes from "./routes/stream.route.js"
 import guildChatRoutes from "./routes/guildMessage.routes.js"
+import leaderboardRoutes from "./routes/leaderboard.routes.js"
 import cookieParser from "cookie-parser"
 import dotenv from "dotenv"
 import { connectDB } from "./db/db.js";
@@ -40,6 +41,7 @@ app.use("/api/guild", guildRoutes)
 app.use("/api/friend-request", friendRequestRoutes)
 app.use("/api/stream", streamRoutes)
 app.use("/api/guildchat", guildChatRoutes)
+app.use("/api/leaderboard", leaderboardRoutes)
 
 // WebSocket handling for browser streams
 import { io } from "./lib/socket.js";
