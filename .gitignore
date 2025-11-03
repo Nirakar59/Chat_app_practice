@@ -1,2 +1,3 @@
 backend/.env
 backend/media
+backend/node_modules

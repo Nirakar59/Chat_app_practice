@@ -57,7 +57,7 @@ const SignupPage = () => {
     }
 
     // Email format: only letters/numbers before @, then domain
-    const emailRegex = /^[a-z0-9]+@[a-z0-9]+\.[a-z]{2,}$/
+    const emailRegex = /^(?!\d+$)[a-z0-9]+@[a-z0-9]+\.[a-z]{2,}$/;
     if (!emailRegex.test(email)) {
       return "Email must contain only letters/numbers before @, be in lowercase, and have valid domain (e.g., user123@example.com)"
     }

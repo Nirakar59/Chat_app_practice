@@ -36,7 +36,7 @@ const LoginPage = () => {
     }
 
     // Email format: only letters/numbers before @, then domain
-    const emailRegex = /^[a-z0-9]+@[a-z0-9]+\.[a-z]{2,}$/
+    const emailRegex = /^[a-z0-9]+@[a-z]+\.[a-z]{2,}$/
     if (!emailRegex.test(email)) {
       return "Invalid email format (e.g., user123@example.com)"
     }
