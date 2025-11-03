@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useAuthStore } from '../store/useAuthStore'
-import { Eye, EyeOff, Sparkles, Lock, Mail } from 'lucide-react'
+import { Eye, EyeOff, Sparkles, Lock, Mail, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import AuthImagePattern from '../components/AuthImage'
 import toast from 'react-hot-toast'
@@ -12,20 +12,112 @@ const LoginPage = () => {
     password: ''
   })
 
+  const [errors, setErrors] = useState({
+    email: '',
+    password: ''
+  })
+
+  const [touched, setTouched] = useState({
+    email: false,
+    password: false
+  })
+
   const { login, isLoggingIn } = useAuthStore()
 
-  const validateInput = () => {
-    if (!formData.email.trim()) return toast.error("Email required !!")
-    if (!/\S+@\S+\.\S+/.test(formData.email)) return toast.error("Invalid email format");
-    if (!formData.password) return toast.error("Password is required");
-    if (formData.password.length < 6) return toast.error("Password must be at least 6 characters");
-    return true;
+  // Validation functions
+  const validateEmail = (email) => {
+    if (!email) {
+      return "Email is required"
+    }
+
+    // Check if email is in lowercase
+    if (email !== email.toLowerCase()) {
+      return "Email must be in lowercase"
+    }
+
+    // Email format: only letters/numbers before @, then domain
+    const emailRegex = /^[a-z0-9]+@[a-z0-9]+\.[a-z]{2,}$/
+    if (!emailRegex.test(email)) {
+      return "Invalid email format (e.g., user123@example.com)"
+    }
+
+    return ""
+  }
+
+  const validatePassword = (password) => {
+    if (!password) {
+      return "Password is required"
+    }
+    if (password.length < 8) {
+      return "Password must be at least 8 characters"
+    }
+    return ""
+  }
+
+  // Handle input changes with validation
+  const handleInputChange = (field, value) => {
+    setFormData({ ...formData, [field]: value })
+
+    // Real-time validation
+    let error = ""
+    if (field === 'email') {
+      error = validateEmail(value)
+    } else if (field === 'password') {
+      error = validatePassword(value)
+    }
+
+    setErrors({ ...errors, [field]: error })
+  }
+
+  // Handle blur to mark field as touched
+  const handleBlur = (field) => {
+    setTouched({ ...touched, [field]: true })
+  }
+
+  // Final validation before submit
+  const validateForm = () => {
+    const emailError = validateEmail(formData.email)
+    const passwordError = validatePassword(formData.password)
+
+    setErrors({
+      email: emailError,
+      password: passwordError
+    })
+
+    setTouched({
+      email: true,
+      password: true
+    })
+
+    if (emailError) {
+      toast.error(emailError)
+      return false
+    }
+    if (passwordError) {
+      toast.error(passwordError)
+      return false
+    }
+
+    return true
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    const success = validateInput()
-    if (success) login(formData)
+
+    if (validateForm()) {
+      login(formData)
+    }
+  }
+
+  // Helper to show error state
+  const getInputClass = (field) => {
+    if (touched[field] && errors[field]) {
+      return "input input-bordered input-error w-full pl-12 focus:input-error"
+    }
+    if (touched[field] && !errors[field] && formData[field]) {
+      return "input input-bordered input-success w-full pl-12 focus:input-success"
+    }
+    return "input input-bordered w-full pl-12 focus:input-primary transition-all"
   }
 
   return (
@@ -71,41 +163,67 @@ const LoginPage = () => {
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-semibold">Email Address</span>
+                {touched.email && !errors.email && formData.email && (
+                  <CheckCircle2 className="w-4 h-4 text-success" />
+                )}
               </label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-base-content/40" />
                 <input
                   type="email"
                   placeholder="you@example.com"
-                  className="input input-bordered w-full pl-12 focus:input-primary transition-all"
+                  className={getInputClass('email')}
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) => handleInputChange('email', e.target.value.toLowerCase())}
+                  onBlur={() => handleBlur('email')}
                 />
+                {touched.email && !errors.email && formData.email && (
+                  <CheckCircle2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-success" />
+                )}
+                {touched.email && errors.email && (
+                  <AlertCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-error" />
+                )}
               </div>
+              {touched.email && errors.email && (
+                <label className="label">
+                  <span className="label-text-alt text-error">{errors.email}</span>
+                </label>
+              )}
             </div>
 
             {/* Password Input */}
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-semibold">Password</span>
+                {touched.password && !errors.password && formData.password && (
+                  <CheckCircle2 className="w-4 h-4 text-success" />
+                )}
               </label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-base-content/40" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Enter your password"
-                  className="input input-bordered w-full pl-12 pr-12 focus:input-primary transition-all"
+                  className={getInputClass('password')}
                   value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  onChange={(e) => handleInputChange('password', e.target.value)}
+                  onBlur={() => handleBlur('password')}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-base-content/70 hover:text-base-content transition-colors"
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
+                {formData.password && (
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-base-content/70 hover:text-base-content transition-colors z-10"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                )}
               </div>
+              {touched.password && errors.password && (
+                <label className="label">
+                  <span className="label-text-alt text-error">{errors.password}</span>
+                </label>
+              )}
             </div>
 
             {/* Submit Button */}
